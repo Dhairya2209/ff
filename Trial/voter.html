@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter ID Generator</title>
+</head>
+<body>
+    <h2>Voter ID Card Generator</h2>
+    <form id="voterForm">
+        <label for="name">Name:</label><br>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="dob">Date of Birth:</label><br>
+        <input type="date" id="dob" name="dob" required><br><br>
+        <label for="gender">Gender:</label><br>
+        <select id="gender" name="gender" required>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+        </select><br><br>
+        <label for="aadhaar">Aadhaar Number:</label><br>
+        <input type="text" id="aadhaar" name="aadhaar" required><br><br>
+        <button type="button" onclick="generateVoterIDCard()">Generate Voter ID Card</button>
+    </form>
+
+    <canvas id="voterIdCanvas" width="400" height="250" style="display: none;"></canvas>
+    <br>
+    <button id="downloadBtn" style="display: none;" onclick="downloadImage()">Download Voter ID</button>
+
+    <script>
+        // Function to generate a unique voter ID from Aadhaar number
+        function generateVoterID(aadhaar_no) {
+            let hash = 0;
+            for (let i = 0; i < aadhaar_no.length; i++) {
+                hash = (hash << 5) - hash + aadhaar_no.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return 'VOTER' + Math.abs(hash).toString().padStart(8, '0');
+        }
+
+        // Function to create and render voter ID card
+        function generateVoterIDCard() {
+            const name = document.getElementById("name").value;
+            const dob = document.getElementById("dob").value;
+            const gender = document.getElementById("gender").value;
+            const aadhaar_no = document.getElementById("aadhaar").value;
+
+            if (name && dob && gender && aadhaar_no) {
+                const voter_id = generateVoterID(aadhaar_no);
+
+                // Get canvas context
+                const canvas = document.getElementById("voterIdCanvas");
+                const ctx = canvas.getContext("2d");
+
+                // Draw the background
+                ctx.fillStyle = "#e0e0e0"; // Light grey background
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw the border
+                ctx.strokeStyle = "#000000"; // Black border
+                ctx.lineWidth = 2;
+                ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+
+                // Add text content
+                ctx.fillStyle = "#000000"; // Black text
+                ctx.font = "18px Arial";
+                ctx.fillText("Voter ID Card", 140, 40);
+
+                ctx.font = "16px Arial";
+                ctx.fillText("Name: " + name, 20, 80);
+                ctx.fillText("DOB: " + dob, 20, 110);
+                ctx.fillText("Gender: " + gender, 20, 140);
+                ctx.fillText("Voter ID: " + voter_id, 20, 170);
+
+                // Show the canvas and download button
+                canvas.style.display = "block";
+                document.getElementById("downloadBtn").style.display = "inline";
+            }
+        }
+
+        // Function to download the voter ID as an image
+        function downloadImage() {
+            const canvas = document.getElementById("voterIdCanvas");
+            const link = document.createElement("a");
+            link.download = "voter_id.png";
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>

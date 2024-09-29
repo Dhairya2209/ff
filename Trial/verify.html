@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCR with Tesseract.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@latest/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <h1>Upload Image</h1>
+    <form id="uploadForm">
+        <input type="file" id="imageInput" accept="image/*" required>
+        <button type="submit">Upload and Process</button>
+    </form>
+
+    <h2>Extracted Details</h2>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const imageInput = document.getElementById('imageInput');
+            if (imageInput.files.length === 0) {
+                alert("Please select an image file.");
+                return;
+            }
+
+            const file = imageInput.files[0];
+            const image = URL.createObjectURL(file);
+
+            Tesseract.recognize(
+                image,
+                'eng+guj',
+                { logger: info => console.log(info) }
+            ).then(({ data: { text } }) => {
+                const lines = text.trim().split('\n');
+                const name = lines[2]?.trim() || "Name not found";
+
+                const dobPattern = /DOB\s*:\s*(\d{2}\/\d{2}\/\d{4})/;
+                const genderPattern = /(Male|Female)/i;
+                const aadharPattern = /(\d{4}\s\d{4}\s\d{4})/;
+
+                const dobMatch = dobPattern.exec(text);
+                const genderMatch = genderPattern.exec(text);
+                const aadharMatch = aadharPattern.exec(text);
+
+                document.getElementById('result').innerHTML = `
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Date of Birth:</strong> ${dobMatch ? dobMatch[1] : "DOB not found"}</p>
+                    <p><strong>Gender:</strong> ${genderMatch ? genderMatch[1] : "Gender not found"}</p>
+                    <p><strong>Aadhaar Number:</strong> ${aadharMatch ? aadharMatch[1] : "Aadhaar not found"}</p>
+                `;
+            }).catch(error => {
+                console.error("Error processing image:", error);
+                document.getElementById('result').textContent = `Error: ${error.message}`;
+            });
+        });
+    </script>
+</body>
+</html>
